@@ -17,5 +17,12 @@ pipeline {
                 echo 'Deploying....'
             }
         }
+        stage("ssh-server") {
+            steps {
+                sshagent(['ssh-remote']) {
+                    sh 'ssh root@localhost -o StrictHostKeyChecking=no -p 2022'
+                }
+            }
+        }
     }
 }
