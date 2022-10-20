@@ -20,7 +20,7 @@ pipeline {
         stage("ssh-server") {
             steps {
                 sshagent(['ssh-remote']) {
-                    sh 'ssh root@localhost -o StrictHostKeyChecking=no -p 2022'
+                    sh 'ssh root@localhost -o StrictHostKeyChecking=no -p 2022 '
                 }
             }
         }
