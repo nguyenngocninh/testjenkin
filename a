@@ -1,0 +1,39 @@
+
+1.Qua biến con trỏ
+volatile uint32_t *pFlashAddress = (volatile uint32_t *)0xFFA00000;
+volatile uint32_t *pFlashAddress = (volatile uint32_t *)(BASE+43);
+
+for (i = 0x00A0U; i <= 0x00D8U; i += 4U) {
+     (*(volatile uint32_t *)(BASE + i+ ka)) = 0x00000000U;
+ }
+	
+2. Qua macro
+#define     stg_FLMD_CFG  (*(volatile struct tag_FLMD_CFG *)0xFFA00000) đối tượng
+#define p_FLMD_CFG ((volatile struct tag_FLMD_CFG *)0xFFA00000 --> con trỏ.
+
+3. Sử dụng Thuộc tính Trình biên dịch (Compiler Attributes)
+volatile struct tag_FLMD_CFG stg_FLMD_CFG __at(0xFFA00000);
+
+4. Định nghĩa thông qua File Cấu hình Bộ liên kết (Linker Script / Scatter File)
+extern volatile struct tag_FLMD_CFG stg_FLMD_CFG
+Use code with caution.2. Định nghĩa thông qua File Cấu hình Bộ liên kết (Linker Script / Scatter File)Bạn khai báo một biến extern bình thường trong code C, sau đó chỉ định địa chỉ vật lý của nó bên trong file cấu hình của Linker (.ld hoặc .sct).Code C:cextern volatile struct tag_FLMD_CFG stg_FLMD_CFG;
+Use code with caution.Linker Script (.ld):linker-script_stg_FLMD_CFG = 0xFFA00000;
+
+5. Bản đồ hóa vùng nhớ qua Mảng (Array-Based Mapping)Thường dùng khi bạn muốn truy cập một vùng nhớ lớn (như RAM ngoại vi, Flash, hoặc bảng Vector) theo dạng chỉ số (index).
+#define RAM_BASE ((volatile uint32_t *)0x20000000)
+// Truy cập ô nhớ thứ 5: RAM_BASE[4]
+
+6. Sử dụng Con trỏ Hàm (Function Pointer) để trỏ đến code vùng nhớ
+void (*app_reset_handler)(void) = (void (*)(void))(*(volatile uint32_t *)0x08004004);
+app_reset_handler(); // Nhảy đến địa chỉ ứng dụng
+
+7. Sử dụng Hợp ngữ nhúng (Inline Assembly)
+uint32_t read_hardware_register(void) {
+    uint32_t val;
+    // Nạp trực tiếp giá trị từ địa chỉ 0xFFA00000 vào biến val
+    __asm volatile ("ldr %0, [%1]" : "=r" (val) : "r" (0xFFA00000));
+    return val;
+}
+
+8. Ép kiểu trực tiếp lúc gọi hàm (Inline Cast / Anonymous Reference)Nếu bạn chỉ cần đọc hoặc ghi vào địa chỉ đó duy nhất một lần trong code và không muốn đặt tên biến hay tạo macro, bạn có thể ép kiểu và kích hoạt con trỏ ngay tại dòng lệnh.Ví dụ:c// Ghi giá trị 0x01 trực tiếp vào địa chỉ 0xFFA00000 mà không cần khai báo trước
+*(volatile uint32_t *)0xFFA00000 = 0x01; 
